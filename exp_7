@@ -1,0 +1,112 @@
+
+EXP 07: // TO IMPLEMENT SLIDING WINDOW PROTOCOL IN DLL.
+
+SRSEND
+import java.io.*;
+import java.net.*;
+import java.lang.*;
+public class srsend
+{
+public static void main(String args[])
+{
+int serverport=3333;
+String address="127.0.0.2";
+try
+{
+InetAddress ipaddress=InetAddress.getByName(address);
+Socket socket=new Socket(ipaddress,serverport);
+InputStream sin=socket.getInputStream();
+OutputStream sout=socket.getOutputStream();
+DataInputStream in=new DataInputStream(sin);
+DataOutputStream out=new DataOutputStream(sout);
+BufferedReader keyboard=new BufferedReader(new InputStreamReader(System.in));
+String line=null;
+String word []=new String [8];
+int i;
+System.out.println("plz input the no of frames to b sent");
+int n=Integer.parseInt(keyboard.readLine());
+for(i=0;i<n;i++)
+{
+word[i]=keyboard.readLine();
+}
+i=0;
+while(i<n)
+{
+System.out.println("sending frame "+word[i]);
+out.writeUTF(word[i]);
+out.flush();
+i++;
+}
+try
+{
+Thread.sleep(1000);
+}
+catch(InterruptedException e)
+{
+e.printStackTrace();
+}
+line=in.readUTF();
+System.out.println("nack received for frame "+line);
+i=Integer.parseInt(line);
+out.writeUTF(word[i]);
+System.out.println("retransmitting lost frame  "+word[i]);
+System.out.println("sending frame "+word[i]);
+out.writeUTF(word[i]);
+out.flush();
+}
+catch(Exception e)
+{
+e.printStackTrace();
+}
+}
+}
+
+SRRECEIVE
+import java.net.*;
+import java.io.*;
+public class srreceive
+{
+public static void main(String args[])
+{
+int port=3333;
+try
+{
+ServerSocket ss=new ServerSocket(port);
+System.out.println("waiting for user2");
+Socket socket=ss.accept();
+System.out.println("user detected");
+System.out.println();
+InputStream sin=socket.getInputStream();
+OutputStream sout=socket.getOutputStream();
+DataInputStream in=new DataInputStream(sin);
+DataOutputStream out=new DataOutputStream(sout);
+BufferedReader keyboard=new BufferedReader(new InputStreamReader(System.in));
+String line=null;
+String word []=new String [8];
+int i=1;
+while(i<8)
+{
+if(i!=4)
+{
+line=in.readUTF();
+word[i-1]=line;
+System.out.println("frame "+word[i-1]+" received successfully");
+}
+i++;
+}
+word[4]=null;
+System.out.println("input lost frame no ");
+line=keyboard.readLine();
+System.out.println("not received frame "+line+" requesting for retransmission");
+out.writeUTF(line);
+out.flush();
+line=in.readUTF();
+word[4]=line;
+System.out.println("retransmitted frame received and reassembled");
+}
+catch(Exception e)
+{
+e.printStackTrace();
+}
+}
+}

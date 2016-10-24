@@ -1,0 +1,194 @@
+// TO IMPLEMENT STOP AND WAIT PROTOCOL IN DLL.
+
+import java.io.*;
+import java.net.*;
+import java.lang.*;
+public class snwsend
+{
+public static void main(String args[])
+{
+int serverport=3333;
+String address="127.0.0.2";
+try
+{
+InetAddress ipaddress=InetAddress.getByName(address);
+Socket socket=new Socket(ipaddress,serverport);
+InputStream sin=socket.getInputStream();
+OutputStream sout=socket.getOutputStream();
+DataInputStream in=new DataInputStream(sin);
+DataOutputStream out=new DataOutputStream(sout);
+BufferedReader keyboard=new BufferedReader(new InputStreamReader(System.in));
+String word[]=new String [5];
+String line=null;
+for(int i=0;i<5;i++)
+{
+word[i]=keyboard.readLine();
+}
+int i=0;
+while(i<5)
+{
+if(i<3 || i>3)
+{
+System.out.println("sending "+i+"th frame");
+out.writeUTF(word[i]);
+out.flush();
+line=in.readUTF();
+if(line.equals("ack"))
+{
+System.out.println("transmission successful");
+i++;
+}
+else
+{
+break;
+}
+}
+if(i==3)
+{
+System.out.println("sending "+i+"th frame");
+out.writeUTF(word[i]);
+out.flush();
+try
+{
+Thread.sleep(1000);
+}
+catch(InterruptedException e)
+{
+e.printStackTrace();
+}
+System.out.println("ack or nack not received, timeout reached.retransmitting frame");
+out.writeUTF(word[i]);
+out.flush();
+line=in.readUTF();
+if(line.equals("ack"))
+{
+System.out.println("transmission successful");
+}
+i++;
+} } }
+catch (Exception e)
+{
+e.printStackTrace();
+}  }  }
+
+
+/* Output:
+
+C:\Java\jdk1.7.0\bin>javac snwsend.java
+
+C:\Java\jdk1.7.0\bin>java snwsend
+1
+2
+3
+4
+5
+sending 0th frame
+transmission successful
+sending 1th frame
+transmission successful
+sending 2th frame
+transmission successful
+sending 3th frame
+ack or nack not received, timeout reached.retransmitting frame
+transmission successful
+sending 4th frame
+transmission successful
+
+C:\Java\jdk1.7.0\bin>
+*/
+
+
+//RECEIVER
+
+import java.net.*;
+import java.io.*;
+import java.lang.*;
+public class snwreceive
+{
+public static void main(String args[])
+{
+int port=3333;
+try
+{
+ServerSocket ss=new ServerSocket(port);
+System.out.println("waiting for user2");
+Socket socket=ss.accept();
+System.out.println("user detected");
+System.out.println();
+InputStream sin=socket.getInputStream();
+OutputStream sout=socket.getOutputStream();
+DataInputStream in=new DataInputStream(sin);
+DataOutputStream out=new DataOutputStream(sout);
+BufferedReader keyboard=new BufferedReader(new InputStreamReader(System.in));
+String line=null;
+int i=0;
+System.out.println();
+while(i<5)
+{
+line=in.readUTF();
+System.out.println("user1 : "+line);
+line="ack";
+System.out.println("ack sent");
+out.writeUTF(line);
+out.flush();
+i++;
+if(i==3)
+{
+System.out.println("frame not received or received with errors");
+try
+{
+Thread.sleep(1000);
+}
+catch(InterruptedException e)
+{
+e.printStackTrace();
+}
+line=in.readUTF();
+System.out.println("sender "+line);
+System.out.println("retransmitted frame received");
+line="ack";
+out.writeUTF(line);
+out.flush();
+i++;
+}
+if(i==5)
+{
+line="eot";
+out.writeUTF(line);
+out.flush();
+}
+}
+}
+catch(Exception e)
+{
+e.printStackTrace();
+}
+}
+}
+
+
+/*Output:
+
+C:\Java\jdk1.7.0\bin>javac snwreceive.java
+
+C:\Java\jdk1.7.0\bin>java snwreceive
+waiting for user2
+user detected
+
+
+user1 : 1
+ack sent
+user1 : 2
+ack sent
+user1 : 3
+ack sent
+frame not received or received with errors
+sender 4
+retransmitted frame received
+user1 : 4
+ack sent
+
+C:\Java\jdk1.7.0\bin> */
+
+
+
